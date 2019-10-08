@@ -27,7 +27,7 @@ function x_dot = din_plant(x, vl, vr)
     alpha = n*Kt/Rm;
     beta  = n*Kt*Kb/Rm + fm;
     
-    % == definição das constantes para serem utilizadas nas equações ==
+    % == definicao das constantes para serem utilizadas nas equacoes ==
     c1 = (2*m + M)*R^2 + 2*n^2*Jm;
     c2 = M*L*R;
     c3 = 2*n^2*Jm;
