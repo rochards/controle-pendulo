@@ -132,8 +132,8 @@ function x_dot = din_plant(x, u)
     c4 = M*g*L;
     c5 = M*L^2 + Jpsi + 2*n^2*Jm;
     
-    f1 = (c2*cos(x(2)) - c3)/c5;
-    f2 = (c2*cos(x(2)) - c3)/c1;
+    h1 = (c2*cos(x(2)) - c3)/c5;
+    h2 = (c2*cos(x(2)) - c3)/c1;
     
     % == tensoes aplicadas aos motores ==
     %vl = Gu*(mi*Vb - Vo)*u; % motor esquerdo
@@ -143,9 +143,9 @@ function x_dot = din_plant(x, u)
     x_dot    = zeros(4, 1);
     x_dot(1) = x(3);
     x_dot(2) = x(4);
-    x_dot(3) = (1/(c1 - f1*(c2*cos(x(2)) - c3)))*( -2*(beta*(1 + f1) + fw)*x(3) + 2*beta*(1 + f1)*x(4) ...
-                                                  + (c2*x(4)^2 - f1)*sin(x(2)) + alpha*(1 + f1)*(u(1) + u(2)) );
-    x_dot(4) = (1/(c5 - f2*(c2*cos(x(2)) - c3)))*( 2*(beta + f2*(beta + fw))*x(3) - 2*beta*(1 + f2)*x(4) ...
-                                                  + (c4 - f2*c2*x(4)^2)*sin(x(2)) - alpha*(1 + f2)*(u(1) + u(2)) );
+    x_dot(3) = (1/(c1 - h1*(c2*cos(x(2)) - c3)))*( -2*(beta*(1 + h1) + fw)*x(3) + 2*beta*(1 + h1)*x(4) ...
+                                                  + (c2*x(4)^2 - h1)*sin(x(2)) + alpha*(1 + h1)*(u(1) + u(2)) );
+    x_dot(4) = (1/(c5 - h2*(c2*cos(x(2)) - c3)))*( 2*(beta + h2*(beta + fw))*x(3) - 2*beta*(1 + h2)*x(4) ...
+                                                  + (c4 - h2*c2*x(4)^2)*sin(x(2)) - alpha*(1 + h2)*(u(1) + u(2)) );
     
 end
