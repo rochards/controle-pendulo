@@ -4,27 +4,39 @@ clc
 
 % == implementacao pendulo invertido ==
 
-% % == definindo variaveis iniciais ==
-% x0 = [0; 0; 0; 0]; % condicao incial -> theta; psi; theta_dot; psi_dot
-% imax  = 10; % numero maximo de iteracoes da simulacao
-Ts  = 0.4; % periodo de amostragem
-K = gain_matrix(Ts)
-% y  = zeros(imax, 3); % saída -> theta; theta_dot; psi_dot
-% u  = zeros(imax, 2); % acao de controle -> vl, vr
-% K  = zeros(imax, 1); % devera ser difinido pelo LQR
-% 
-% for i = 2:imax
-%     % == evoluindo a dinamica da planta ==
-%     [t, x_states] = ode45(@(t, x) din_plant(t, x, u(k)), [0 T], x0);
-%     
-%     % == atualizando condicoes iniciais ==
-%     x0(1:4) = x_states(end, 1:4);
-%     
-%     % == atualizando saidas ==
-%     y(i+1, 1) = x_sates(end, 1); % theta
-%     y(i+1, 2) = x_sates(end, 3); % theta_dot
-%     y(i+1, 3) = x_sates(end, 4); % psi_dot
-% end
+% == definindo variaveis iniciais ==
+x0   = [0; pi/180; 0; 0];   % condicao incial -> theta; psi; theta_dot; psi_dot
+imax = 1000;             % numero maximo de iteracoes da simulacao
+Ts   = 4e-3;           % s -> periodo de amostragem
+y    = zeros(imax, 3); % saída -> theta; theta_dot; psi_dot
+u    = zeros(2, imax); % acao de controle -> vl, vr
+
+psi = zeros(imax, 1);
+
+% == calculo da matriz de ganhos ==  
+K    = gain_matrix(Ts);
+
+for i = 2:imax
+    
+    % calculando acao de controle
+    u(:,i) = -K*x0;
+    
+    % == evoluindo a dinamica da planta ==
+    [t, x_states] = ode45(@(t, x) din_plant(t, x, u(:,i)), [0 Ts], x0);
+    
+    % == atualizando estados da planta ==
+    x0(1:4) = x_states(end, 1:4);
+    
+    % == atualizando saidas ==
+    y(i+1, 1) = x_states(end, 1); % theta
+    psi(i+1)  = x_states(end, 2)*180/pi; 
+    y(i+1, 2) = x_states(end, 3); % theta_dot
+    y(i+1, 3) = x_states(end, 4); % psi_dot
+end
+
+% == plotando os resultados para psi
+plot(linspace(0, imax*Ts, imax+1), psi(1:end), 'LineWidth', 2), hold on
+ylabel('psi[º]'), xlabel('t[s]'), grid on
 
 function K = gain_matrix(Ts)
     % == parametros da planta ==
@@ -34,7 +46,7 @@ function K = gain_matrix(Ts)
     M = 0.6;   % kg   -> massa do corpo (pêndulo)
     L = 0.072; % m    -> distância da roda ao centro de massa
     Jpsi = 0.001;  % kgm²     -> body pitch inertia moment
-    Jm   = 10^-5;  % kgm²     -> momento de inercia do motor DC
+    Jm   = 1e-5;   % kgm²     -> momento de inercia do motor DC
     Rm   = 6.69;   % ohm      -> resistencia do motor DC
     Kb   = 0.468;  % V s/rad  -> DC motor back EMF constant
     Kt   = 0.317;  % Nm/A     -> constante do torque do motor DC
@@ -42,7 +54,7 @@ function K = gain_matrix(Ts)
     Vb   = 8.00;   % V        -> tensao de alimentacao
     Vo   = 0.625;  % V        -> tensao de offset
     mi   = 1.089;  %          -> fator de ganho da alimentacao
-    Gu   = 10^-2;  %          -> fator de ganho do PWM
+    Gu   = 1e-2;   %          -> fator de ganho do PWM
     n    = 1;      %          -> gearbox ratio
     fw   = 0;      %          -> coeficiente de atrito entre a roda e o chao.
 
@@ -94,15 +106,14 @@ function K = gain_matrix(Ts)
     
     % == implementando o dLQR ==
     Q = [1 0 0 0
-         0 0 0 0
-         0 0 10 0
-         0 0 0 2];
-    R = [1 0
-         0 1];
+         0 6e5 0 0
+         0 0 1 0
+         0 0 0 1];
+    R = eye(2);
     [K, S, e] = dlqr(sys.A, sys.B, Q, R, 0);
 end
 
-function x_dot = din_plant(x, u)
+function x_dot = din_plant(t, x, u)
     % == parametros da planta ==
     g = 9.81;  % m/s² -> aceleracao da gravidade
     m = 0.03;  % kg   -> massa das rodas
@@ -110,7 +121,7 @@ function x_dot = din_plant(x, u)
     M = 0.6;   % kg   -> massa do corpo (pêndulo)
     L = 0.072; % m    -> distância da roda ao centro de massa
     Jpsi = 0.001;  % kgm²     -> body pitch inertia moment
-    Jm   = 10^-5;  % kgm²     -> momento de inercia do motor DC
+    Jm   = 1e-5;   % kgm²     -> momento de inercia do motor DC
     Rm   = 6.69;   % ohm      -> resistencia do motor DC
     Kb   = 0.468;  % V s/rad  -> DC motor back EMF constant
     Kt   = 0.317;  % Nm/A     -> constante do torque do motor DC
@@ -118,7 +129,7 @@ function x_dot = din_plant(x, u)
     Vb   = 8.00;   % V        -> tensao de alimentacao
     Vo   = 0.625;  % V        -> tensao de offset
     mi   = 1.089;  %          -> fator de ganho da alimentacao
-    Gu   = 10^-2;  %          -> fator de ganho do PWM
+    Gu   = 1e-2;   %          -> fator de ganho do PWM
     n    = 1;      %          -> gearbox ratio
     fw   = 0;      %          -> coeficiente de atrito entre a roda e o chao.
 
