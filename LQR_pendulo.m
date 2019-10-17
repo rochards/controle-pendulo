@@ -149,6 +149,8 @@ function x_dot = din_plant(t, x, u)
     % == tensoes aplicadas aos motores ==
     %vl = Gu*(mi*Vb - Vo)*u; % motor esquerdo
     %vr = vl;                % motor direito
+    u(1) = Gu*(mi*Vb - Vo)*u(1);
+    u(2) = Gu*(mi*Vb - Vo)*u(2);
     
     % == iniciando o vetor de estados == 
     x_dot    = zeros(4, 1);
