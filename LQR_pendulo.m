@@ -19,7 +19,7 @@ K    = gain_matrix(Ts);
 for i = 2:imax
     
     % calculando acao de controle
-    u(:,i) = K*x0;
+    u(:,i) = -K*x0;
     
     % == evoluindo a dinamica da planta ==
     [t, x_states] = ode45(@(t, x) din_plant(t, x, u(:,i)), [0 Ts], x0);
