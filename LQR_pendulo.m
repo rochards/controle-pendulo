@@ -12,11 +12,12 @@ y    = zeros(imax, 3); % saída -> theta; theta_dot; psi_dot
 u    = zeros(2, imax); % acao de controle -> vl, vr
 
 psi = zeros(imax, 1);
+psi(1:2) = x0(2);
 
 % == calculo da matriz de ganhos ==  
 K    = gain_matrix(Ts);
 
-for i = 2:imax
+for i = 1:imax
     
     % calculando acao de controle
     u(:,i) = K*x0;
