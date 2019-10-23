@@ -5,18 +5,19 @@ clc
 % == implementacao pendulo invertido ==
 
 % == definindo variaveis iniciais ==
-x0   = [0; 5*pi/180; 0; 0];   % condicao incial -> theta; psi; theta_dot; psi_dot
+x0   = [0; 1*pi/180; 0; 0];   % condicao incial -> theta; psi; theta_dot; psi_dot
 imax = 1000;           % numero maximo de iteracoes da simulacao
 Ts   = 4e-3;           % s -> periodo de amostragem
 y    = zeros(imax, 3); % saída -> theta; theta_dot; psi_dot
 u    = zeros(2, imax); % acao de controle -> vl, vr
 
 psi = zeros(imax, 1);
+psi(1:3) = 1*pi/180;
 
 % == calculo da matriz de ganhos ==  
 K    = gain_matrix(Ts);
 
-for i = 2:imax
+for i = 1:imax
     
     % calculando acao de controle
     u(:,i) = -K*x0;
@@ -73,17 +74,17 @@ function K = gain_matrix(Ts)
     df2dx1 = 0; df2dx2 = 0; df2dx3 = 0; df2dx4 = 1;
     df3dx1 = 0;
     df3dx2 = -c4*(c2 - c3)/(-c2^2 + 2*c2*c3 - c3^2 + c1*c5);
-    df3dx3 = -2*(beta*(c2 - c3 + c5) + c5*fw)/(-c2^2 + 2*c2*c3 - c3^2 + c1*c5);
-    df3dx4 = 2*beta*(c2 - c3 + c5)/(-c2^2 + 2*c2*c3 - c3^2 + c1*c5);
+    df3dx3 = -(beta*(2*c2 - 2*c3 + c5) + c5*fw)/(-c2^2 + 2*c2*c3 - c3^2 + c1*c5);
+    df3dx4 = beta*(2*c2 - 2*c3 + c5)/(-c2^2 + 2*c2*c3 - c3^2 + c1*c5);
     df4dx1 = 0;
-    df4dx2 = (c1*c4)/(-c2^2 + 2*c2*c3 - c3^2 + c1*c5);
-    df4dx3 = 2*(beta*(c1 + c2 - c3) + fw*(c2 - c3))/(-c2^2 + 2*c2*c3 - c3^2 + c1*c5);
-    df4dx4 = -2*beta*(c1 + c2 - c3)/(-c2^2 + 2*c2*c3 - c3^2 + c1*c5);
+    df4dx2 = c1*c4/(-c2^2 + 2*c2*c3 - c3^2 + c1*c5);
+    df4dx3 = (beta*(2*c1 + c2 - c3) + fw*(c2 - c3))/(-c2^2 + 2*c2*c3 - c3^2 + c1*c5);
+    df4dx4 = -beta*(2*c1 + c2 - c3)/(-c2^2 + 2*c2*c3 - c3^2 + c1*c5);
     df1du1 = 0; df1du2 = 0;
     df2du1 = 0; df2du2 = 0;
-    df3du1 = alpha*(c2 - c3 + c5)/(-c2^2 + 2*c2*c3 - c3^2 + c1*c5);
+    df3du1 = alpha*(2*c2 - 2*c3 + c5)/(2*(-c2^2 + 2*c2*c3 - c3^2 + c1*c5));
     df3du2 = df3du1;
-    df4du1 = - alpha*(c1 + c2 - c3)/(-c2^2 + 2*c2*c3 - c3^2 + c1*c5);
+    df4du1 = -alpha*(c1 + 2*c2 - 2*c3)/(2*(-c2^2 + 2*c2*c3 - c3^2 + c1*c5));
     df4du2 = df4du1;
     
     % == definindo matrizes da dinamica do sistema ==
@@ -105,10 +106,10 @@ function K = gain_matrix(Ts)
     sys = ss(A, B, C, 0, Ts);
     
     % == implementando o dLQR ==
-    Q = [2.4674 0 0 0
+    Q = [0 0 0 0
          0 2.4674 0 0
          0 0 1 0
-         0 0 0 1];
+         0 0 0 2.4674];
     R = 0.0156*eye(2);
     [K, S, e] = dlqr(sys.A, sys.B, Q, R, 0);
 end
@@ -156,9 +157,13 @@ function x_dot = din_plant(t, x, u)
     x_dot    = zeros(4, 1);
     x_dot(1) = x(3);
     x_dot(2) = x(4);
-    x_dot(3) = (1/(c1 - h1*(c2*cos(x(2)) - c3)))*( -2*(beta*(1 + h1) + fw)*x(3) + 2*beta*(1 + h1)*x(4) ...
-                                                  + (c2*x(4)^2 - h1*c4)*sin(x(2)) + alpha*(1 + h1)*(u(1) + u(2)) );
-    x_dot(4) = (1/(c5 - h2*(c2*cos(x(2)) - c3)))*( 2*(beta + h2*(beta + fw))*x(3) - 2*beta*(1 + h2)*x(4) ...
-                                                  + (c4 - h2*c2*x(4)^2)*sin(x(2)) - alpha*(1 + h2)*(u(1) + u(2)) );
+%     x_dot(3) = (1/(c1 - h1^2*c5))*( -(beta*(1 + 2*h1) + fw)*x(3) + beta*(1 + 2*h1)*x(4) ...
+%                                                    + alpha*(0.5 + h1)*(u(1) + u(2)) );
+%     x_dot(4) = (1/(c5 - h2^2*c1))*( (2*beta + h2*(beta + fw))*x(3) - beta*(2 + h2)*x(4) ...
+%                                                    - alpha*(1 + 0.5*h2)*(u(1) + u(2)) );
+    x_dot(3) = (1/(c1 - h1^2*c5))*( -(beta*(1 + 2*h1) + fw)*x(3) + beta*(1 + 2*h1)*x(4) ...
+                                                  + (c2*x(4)^2 - h1*c4)*sin(x(2)) + alpha*(0.5 + h1)*(u(1) + u(2)) );
+    x_dot(4) = (1/(c5 - h2^2*c1))*( (2*beta + h2*(beta + fw))*x(3) - beta*(2 + h2)*x(4) ...
+                                                  + (c4 - h2*c2*x(4)^2)*sin(x(2)) - alpha*(1 + 0.5*h2)*(u(1) + u(2)) );
     
 end

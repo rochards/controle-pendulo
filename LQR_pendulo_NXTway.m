@@ -29,26 +29,26 @@ beta  = n*Kt*Kb/Rm + fm;
 
 E = [((2*m + M)*R^2 + 2*Jw + 2*n^2*Jm) (M*L*R - 2*n^2*Jm)
      (M*L*R - 2*n^2*Jm)                (M*L^2 + Jpsi + 2*n^2*Jm)];
-F = 2*[(beta + fw) -beta
-        -beta       beta];
+F = [(beta + fw) -beta
+        -2*beta       2*beta];
 G = [0, 0; 0 -M*g*L];
-H = alpha*[1, 1; -1, -1];
+H = alpha*[0.5, 0.5; -1, -1];
 
 
 A = zeros(4, 4);
 A(1, 3) = 1;
 A(2, 4) = 1;
-A(3, 2) = -g*M*L*E(1,2)/det(E);
-A(3, 3) = -2*((beta + fw)*E(2,2) + beta*E(1,2))/det(E);
-A(3, 4) = 2*beta*(E(2,2) + E(1,2))/det(E);
-A(4, 2) = g*M*L*E(1,1)/det(E);
-A(4, 3) = 2*((beta + fw)*E(1,2) + beta*E(1,1))/det(E);
-A(4, 4) = -2*beta*(E(1,1) + E(1,2))/det(E);
+A(3, 2) = -M*g*L*E(1,2)/det(E);
+A(3, 3) = -((beta + fw)*E(2,2) + 2*beta*E(1,2))/det(E);
+A(3, 4) = beta*(E(2,2) + 2*E(1,2))/det(E);
+A(4, 2) = M*g*L*E(1,1)/det(E);
+A(4, 3) = ((beta + fw)*E(1,2) + 2*beta*E(1,1))/det(E);
+A(4, 4) = -beta*(E(1,2) + 2*E(1,1))/det(E);
 
 B = zeros(2, 2);
-B(3, 1) = alpha*(E(2,2) + E(1,2))/det(E);
+B(3, 1) = alpha*(E(2,2)/2 + E(1,2))/det(E);
 B(3, 2) = B(3, 1);
-B(4, 1) = -alpha*(E(1,1) + E(1,2))/det(E);
+B(4, 1) = -alpha*(E(1,2)/2 + E(1,1))/det(E);
 B(4, 2) = B(4, 1);
 
 C = [1 0 0 0
