@@ -12,11 +12,7 @@ y    = zeros(imax, 3); % saída -> theta; theta_dot; psi_dot
 u    = zeros(2, imax); % acao de controle -> vl, vr
 
 psi = zeros(imax, 1);
-<<<<<<< HEAD
 psi(1:3) = 1*pi/180;
-=======
-psi(1:2) = x0(2);
->>>>>>> undoing_changes
 
 % == calculo da matriz de ganhos ==  
 K    = gain_matrix(Ts);

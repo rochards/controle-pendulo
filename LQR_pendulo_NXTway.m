@@ -26,6 +26,7 @@ alpha = n*Kt/Rm;
 beta  = n*Kt*Kb/Rm + fm;
 
 
+
 E = [((2*m + M)*R^2 + 2*Jw + 2*n^2*Jm) (M*L*R - 2*n^2*Jm)
      (M*L*R - 2*n^2*Jm)                (M*L^2 + Jpsi + 2*n^2*Jm)];
 F = [(beta + fw) -beta
