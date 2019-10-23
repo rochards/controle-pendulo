@@ -157,9 +157,8 @@ function x_dot = din_plant(t, x, u)
     x_dot    = zeros(4, 1);
     x_dot(1) = x(3);
     x_dot(2) = x(4);
-    x_dot(3) = (1/(c1 - h1*(c2*cos(x(2)) - c3)))*( -2*(beta*(1 + h1) + fw)*x(3) + 2*beta*(1 + h1)*x(4) ...
-                                                  + (c2*x(4)^2 - h1*c4)*sin(x(2)) + alpha*(1 + h1)*(u(1) + u(2)) );
-    x_dot(4) = (1/(c5 - h2*(c2*cos(x(2)) - c3)))*( 2*(beta + h2*(beta + fw))*x(3) - 2*beta*(1 + h2)*x(4) ...
-                                                  + (c4 - h2*c2*x(4)^2)*sin(x(2)) - alpha*(1 + h2)*(u(1) + u(2)) );
-    
+    x_dot(3) = (1/(c1 - h1^2*c5))*( -2*(beta*(1 + h1) + fw)*x(3) + 2*beta*(1 + h1)*x(4) ...
+                                    + (c2*x(4)^2 - h1*c4)*sin(x(2)) + alpha*(1 + h1)*(u(1) + u(2)) );
+    x_dot(4) = (1/(c5 - h2^2*c1))*( 2*(beta + h2*(beta + fw))*x(3) - 2*beta*(1 + h2)*x(4) ...
+                                    + (c4 - h2*c2*x(4)^2)*sin(x(2)) - alpha*(1 + h2)*(u(1) + u(2)) );
 end
