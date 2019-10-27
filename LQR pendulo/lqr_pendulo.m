@@ -1,8 +1,15 @@
 clear
-close
+close all
 clc
 
 %% implementacao pendulo invertido
+
+% Implementacao de uma lei de controle u(k) = -K*x(k), onde o vetor de 
+% ganhos K eh obtido pelo dLQR.
+% As simulacoes foram realizadas para os modelos linear e nao linear do 
+% pendulo.
+% A linearizacao foi feita por serie de Taylor.
+
 
 %% condicoes iniciais de simulacao
 
@@ -23,13 +30,13 @@ ul = zeros(2, kmax); % acao de controle -> vl, vr
 xl = zeros(4, kmax); % estados -> theta, psi, theta_dot, psi_dot
 xl(:, 1) = x0;
 
-%% projeto do controlador
+%% obtencao do vetor de ganhos K
 
 % matriz de custo dos estados
 Q = [2.4674 0      0 0
-     0      2.4674 0 0
+     0      246.74 0 0
      0      0      1 0
-     0      0      0 1];
+     0      0      0 245.];
 
 % matriz de custo das entradas
 R = 0.0156*eye(2);
