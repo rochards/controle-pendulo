@@ -94,6 +94,5 @@ function [sysc, sysd] = system_data(Ts)
    
    %% sistema no espaco de estados no tempo discreto
    
-   [Ad, Bd, Cd, Dd] = c2dm(sysc.A, sysc.B, sysc.C, sysc.D, Ts, 'zoh');
-   sysd = ss(Ad, Bd, Cd, Dd, Ts);
+   sysd = c2d(sysc, Ts, 'zoh');
 end
