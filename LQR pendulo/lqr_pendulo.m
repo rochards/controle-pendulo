@@ -13,8 +13,8 @@ clc
 
 %% condicoes iniciais de simulacao
 
-x0   = [0 10*pi/180 0 0]'; % theta, psi, theta_dot, psi_dot
-kmax = 1000; % numero maximo de iteracoes da simulacao
+x0   = [0 30*pi/180 0 0]'; % theta, psi, theta_dot, psi_dot
+kmax = 2000; % numero maximo de iteracoes da simulacao
 Ts   = 4e-3; % s -> periodo de amostragem
 options2 = odeset('Reltol', 1e-7,'AbsTol', 1e-7); %ode45
 
@@ -34,9 +34,9 @@ xl(:, 1) = x0;
 
 % matriz de custo dos estados
 Q = [2.4674 0      0 0
-     0      246.74 0 0
+     0      2.4674 0 0
      0      0      1 0
-     0      0      0 245.];
+     0      0      0 2.4674];
 
 % matriz de custo das entradas
 R = 0.0156*eye(2);
