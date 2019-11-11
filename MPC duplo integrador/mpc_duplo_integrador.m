@@ -12,7 +12,7 @@ clc
 x0   = [1 1]'; 
 kmax = 500;  % numero maximo de iteracoes
 Ts   = 1e-2; % s -> periodo de amostragem
-N    = 5;     % horizonte de predicao
+N    = 5;    % horizonte de predicao
 
 %% scopes
 ulqr = zeros(1, kmax); % entradas lqr
@@ -34,7 +34,7 @@ R = 1;          % matriz de custo da entrada
 
 
 %% obtendo matrizes do MPC
-[Hqp, fqp] = mpc_matrices(Klqr, Q, R, sysd.A, sysd.B, 5);
+[Hqp, fqp] = mpc_matrices(sysd.A, sysd.B, Q, R, Klqr, 5);
 
 
 %% simulando acao de controle
@@ -65,8 +65,9 @@ ylabel('estados'), xlabel('t[s]'), grid on
 legend('x1',  'x2')
 title('Duplo integrador')
 
+% entradas
 figure(2)
 plot(linspace(0, kmax*Ts, kmax), [u; ulqr; umpc])
 ylabel('entradas'), xlabel('t[s]'), grid on
-legend('u_total', 'ulqr',  'umpc')
+legend('u = ulqr + umpc', 'ulqr',  'umpc')
 title('Duplo integrador')
