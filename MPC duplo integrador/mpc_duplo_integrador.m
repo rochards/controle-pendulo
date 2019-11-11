@@ -12,12 +12,15 @@ clc
 x0   = [1 1]'; 
 kmax = 500;  % numero maximo de iteracoes
 Ts   = 1e-2; % s -> periodo de amostragem
+N    = 5;     % horizonte de predicao
 
 %% scopes
 ulqr = zeros(1, kmax); % entradas lqr
+umpc = zeros(1, kmax); % entradas mpc
 u    = zeros(1, kmax); % ulqr+lmpc  
 x    = zeros(2, kmax); % estados
-x(:, 1) = x0;           % passando condicao inicial 
+x(:, 1) = x0;          % passando condicao inicial 
+options =  optimset('Display','off'); % desabilita logs de quadprog
 
 %% obtendo K do lqr
 Q = [100 0; 0 10]; % matriz de custo dos estados
@@ -29,13 +32,23 @@ R = 1;          % matriz de custo da entrada
 % calculo do vetor ganhos
 [Klqr, S, e] = dlqr(sysd.A, sysd.B, Q, R);
 
+
+%% obtendo matrizes do MPC
+[Hqp, fqp] = mpc_matrices(Klqr, Q, R, sysd.A, sysd.B, 5);
+
+
 %% simulando acao de controle
 for k = 1:kmax
-    % calculo acao decontrole do lqr
+    % calculo acao de controle do LQR
     ulqr(k) = -Klqr*x(:, k); 
     
+    % calculo acao de controle MPC
+    fqp_ = -2*x(:, k)'*fqp;
+    umpc_aux = quadprog(Hqp, fqp_, [], [], [], [], [], [], [], options);
+    umpc(k) = umpc_aux(1);
+    
     % calculo acao de controle final
-    u(k) = ulqr(k);
+    u(k) = ulqr(k) + umpc(k);
     
     % evoluindo dinamica da planta
     [t, dummy] = ode45(@(t, x) din_plant(t, x, u(k)), [0 Ts], x(:, k));
@@ -45,7 +58,15 @@ for k = 1:kmax
 end
 
 %% plotando resultados
-plot(linspace(0, kmax*Ts, kmax+1), x, 'LineWidth', 2), hold on
+% estados
+figure(1)
+plot(linspace(0, kmax*Ts, kmax+1), x)
 ylabel('estados'), xlabel('t[s]'), grid on
 legend('x1',  'x2')
+title('Duplo integrador')
+
+figure(2)
+plot(linspace(0, kmax*Ts, kmax), [u; ulqr; umpc])
+ylabel('entradas'), xlabel('t[s]'), grid on
+legend('u_total', 'ulqr',  'umpc')
 title('Duplo integrador')
