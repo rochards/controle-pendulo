@@ -5,10 +5,10 @@ function [Hqp, fqp] = mpc_matrices(A, B, Q, R, K, N)
     %%
     A_ = A - B*K;
     [m, n] = size(A_);
-    Px = zeros(m*N, n);
+    fx = zeros(m*N, n);
     exp = 1;
     for i = 1:m:m*N
-        Px(i:i+m-1, 1:n) = A_^exp;
+        fx(i:i+m-1, 1:n) = A_^exp;
         exp = exp + 1;
     end
     
@@ -40,7 +40,7 @@ function [Hqp, fqp] = mpc_matrices(A, B, Q, R, K, N)
         kappa(i:i+m-1, j:j+n-1) = -K;
         j = j + n;
     end
-    fu_ = fu + kappa*Px;
+    fu_ = fu + kappa*fx;
     Hu  = kappa*Hx + eye(N);
     
     %%
@@ -63,6 +63,5 @@ function [Hqp, fqp] = mpc_matrices(A, B, Q, R, K, N)
     
     %%
     Hqp = Hx'*Q_*Hx + Hu'*R_*Hu;
-    fqp = Px'*Q_*Hx + fu_'*R_*Hu;
-%     fqp = Px'*Q_*Px + fu_'*R_*fu;
+    fqp = fx'*Q_*Hx + fu_'*R_*Hu;
 end

@@ -34,7 +34,7 @@ R = 1;          % matriz de custo da entrada
 
 
 %% obtendo matrizes do MPC
-[Hqp, fqp] = mpc_matrices(sysd.A, sysd.B, Q, R, Klqr, 5);
+[Hqp, fqp] = mpc_matrices(sysd.A, sysd.B, Q, R, Klqr, 3);
 
 
 %% simulando acao de controle
@@ -43,8 +43,8 @@ for k = 1:kmax
     ulqr(k) = -Klqr*x(:, k); 
     
     % calculo acao de controle MPC
-    fqp_ = 2*x(:, k)'*fqp;
-    umpc_aux = quadprog(Hqp, fqp_, [], [], [], [], [], [], [], options);
+    fqp_ = x(:, k)'*fqp;
+    umpc_aux = quadprog(2*Hqp, fqp_, [], [], [], [], [], [], [], options);
     umpc(k) = umpc_aux(1);
     
     % calculo acao de controle final
