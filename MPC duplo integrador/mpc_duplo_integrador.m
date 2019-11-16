@@ -43,7 +43,7 @@ for k = 1:kmax
     ulqr(k) = -Klqr*x(:, k); 
     
     % calculo acao de controle MPC
-    fqp_ = -2*x(:, k)'*fqp;
+    fqp_ = 2*x(:, k)'*fqp;
     umpc_aux = quadprog(Hqp, fqp_, [], [], [], [], [], [], [], options);
     umpc(k) = umpc_aux(1);
     
