@@ -12,7 +12,7 @@ clc
 x0   = [1 1]'; 
 kmax = 500;  % numero maximo de iteracoes
 Ts   = 1e-2; % s -> periodo de amostragem
-N    = 5;    % horizonte de predicao
+N    = 3;    % horizonte de predicao
 
 %% scopes
 ulqr = zeros(1, kmax); % entradas lqr
@@ -23,18 +23,20 @@ x(:, 1) = x0;          % passando condicao inicial
 options =  optimset('Display','off'); % desabilita logs de quadprog
 
 %% obtendo K do lqr
-Q = [100 0; 0 10]; % matriz de custo dos estados
-R = 1;          % matriz de custo da entrada
+Qlqr = [100 0; 0 10]; % matriz de custo dos estados
+Rlqr = 1;          % matriz de custo da entrada
 
 % matrizes do sistema
 [sysc, sysd] = system_data(Ts);
 
 % calculo do vetor ganhos
-[Klqr, S, e] = dlqr(sysd.A, sysd.B, Q, R);
+[Klqr, S, e] = dlqr(sysd.A, sysd.B, Qlqr, Rlqr);
 
 
 %% obtendo matrizes do MPC
-[Hqp, fqp] = mpc_matrices(sysd.A, sysd.B, Q, R, Klqr, 3);
+Qmpc = [1e6 0; 0 5e3]; % matriz de custo dos estados
+Rmpc = 1;          % matriz de custo da entrada
+[Hqp, fqp] = mpc_matrices(sysd.A, sysd.B, Qmpc, Rmpc, Klqr, N);
 
 
 %% simulando acao de controle
@@ -43,18 +45,21 @@ for k = 1:kmax
     ulqr(k) = -Klqr*x(:, k); 
     
     % calculo acao de controle MPC
-    fqp_ = x(:, k)'*fqp;
+    fqp_ = 2*x(:, k)'*fqp;
     umpc_aux = quadprog(2*Hqp, fqp_, [], [], [], [], [], [], [], options);
     umpc(k) = umpc_aux(1);
     
     % calculo acao de controle final
     u(k) = ulqr(k) + umpc(k);
     
-    % evoluindo dinamica da planta
-    [t, dummy] = ode45(@(t, x) din_plant(t, x, u(k)), [0 Ts], x(:, k));
+    % aplicando acao de controle
+    x(:, k+1) = sysd.A*x(:, k) + sysd.B*u(k); 
     
-    % atualizando estados
-    x(:, k+1) = dummy(end, :)';
+%     % evoluindo dinamica da planta
+%     [t, dummy] = ode45(@(t, x) din_plant(t, x, u(k)), [0 Ts], x(:, k));
+%     
+%     % atualizando estados
+%     x(:, k+1) = dummy(end, :)';
 end
 
 %% plotando resultados
