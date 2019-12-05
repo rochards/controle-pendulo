@@ -41,7 +41,7 @@ function [Hqp, fqp] = mpc_matrices(A, B, Q, R, K, N)
         j = j + n;
     end
     fu_ = fu + kappa*fx;
-    Hu  = kappa*Hx + eye(N);
+    Hu  = kappa*Hx + eye(m*N);
     
     %%
     [m, n] = size(Q);
