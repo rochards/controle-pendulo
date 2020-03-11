@@ -15,8 +15,8 @@ Ts   = 1e-2; % s -> periodo de amostragem
 N    = 3;    % horizonte de predicao
 xmax = [1.5 1.5]'; % restricao de estado maxima
 xmin = [-2 -2]';   % restricao de estado minimo
-umax = 50;         % restricao de entrada maxima
-umin = -150;       % restricao de entrada minima
+umax = 10;         % restricao de entrada maxima
+umin = -10;       % restricao de entrada minima
 
 %% scopes
 ulqr = zeros(1, kmax); % entradas lqr
