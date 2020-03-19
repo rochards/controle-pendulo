@@ -1,4 +1,4 @@
-function [Hqp, fqp, Hx, fx, Hu, fu_] = mpc_matrices(A, B, Q, R, K, N)
+function [A_, Hqp, fqp, Hx, fx, Hu, fu_] = mpc_matrices(A, B, Q, R, K, N)
     % [Hqp, fqp] = mpc_matrices(A, B, Q, R, K, N)
     %
     

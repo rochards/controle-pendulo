@@ -11,9 +11,10 @@ clc
 
 %% condicoes iniciais de simulacao
 x0   = [0 5*pi/180 0 0]'; % theta, psi, theta_dot, psi_dot
-kmax = 500; % numero maximo de iteracoes da simulacao
+kmax = 2000; % numero maximo de iteracoes da simulacao
 Ts   = 4e-3; % s -> periodo de amostragem
 N    = 3;    % horizonte de predicao
+
 
 %% scopes
 % linear

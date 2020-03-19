@@ -9,11 +9,11 @@ clc
 %           umpc(k) = ....
 
 %% condicoes iniciais de simulacao
-x0   = [1 1]'; 
+x0   = [1.5 -1]'; 
 kmax = 500;  % numero maximo de iteracoes
 Ts   = 1e-2; % s -> periodo de amostragem
 N    = 3;    % horizonte de predicao
-xmax = [1.5 1.5]'; % restricao de estado maxima
+xmax = [1.2 1.5]'; % restricao de estado maxima
 xmin = [-2 -2]';   % restricao de estado minimo
 umax = 10;         % restricao de entrada maxima
 umin = -10;       % restricao de entrada minima
@@ -44,17 +44,28 @@ Rlqr = 1;          % matriz de custo da entrada
 %% obtendo matrizes do MPC
 Qmpc = [1e6 0; 0 5e3]; % matriz de custo dos estados
 Rmpc = 1;          % matriz de custo da entrada
-[Hqp, fqp, Hx, fx, Hu, fu_] = mpc_matrices(sysd.A, sysd.B, Qmpc, Rmpc, Klqr, N);
+[A_, Hqp, fqp, Hx, fx, Hu, fu_] = mpc_matrices(sysd.A, sysd.B, Qmpc, Rmpc, Klqr, N);
 
 
 %% matrizes de restricao dos estados e controle
 Axqp = vertcat(Hx, -Hx);
-bxqp = vertcat(Xmax, -Xmin)*0;
+bxqp = vertcat(Xmax, -Xmin)*0; % o 0 só serve para dimensionar bxqp
 
 Auqp = vertcat(Hu, -Hu);
-buqp = vertcat(Umax, -Umin)*0;
+buqp = vertcat(Umax, -Umin)*0;% o 0 só serve para dimensionar buqp
 
-Aqp = vertcat(Axqp, Auqp);
+%% matrizes de restricao terminal
+% conjunto Oinf
+Aoinf = [eye(2); -eye(2); -Klqr; Klqr];
+boinf = [xmax; -xmin; umax; -umin];
+
+Hab = [A_^N*sysd.B A_*sysd.B sysd.B]; % para N = 3
+
+Aoqp = Aoinf*Hab;
+boqp = boinf*0; % o 0 só serve para dimensionar boqp
+
+
+Aqp = vertcat(Axqp, Auqp, Aoqp);
 
 %% simulando acao de controle
 for k = 1:kmax
@@ -65,10 +76,13 @@ for k = 1:kmax
     fqp_ = 2*x(:, k)'*fqp;
     bxqp = vertcat(Xmax, -Xmin) + vertcat(-fx, fx)*x(:, k);
     buqp = vertcat(Umax, -Umin) + vertcat(-fu_, fu_)*x(:, k);
-    bqp = vertcat(bxqp, buqp);
+    boqp = boinf - Aoinf*A_^N*x(:, k);
+    bqp = vertcat(bxqp, buqp, boqp);
     
     umpc_aux = quadprog(2*Hqp, fqp_, Aqp, bqp, [], [], [], [], [], options);
-    umpc(k) = umpc_aux(1);
+    if ~isempty(umpc_aux)
+        umpc(k) = umpc_aux(1);
+    end
     
     % calculo acao de controle final
     u(k) = ulqr(k) + umpc(k);
@@ -86,14 +100,16 @@ end
 %% plotando resultados
 % estados
 figure(1)
-plot(linspace(0, kmax*Ts, kmax+1), x)
+%plot(linspace(0, kmax*Ts, kmax+1), x)
+stairs(linspace(0, kmax*Ts, kmax+1), x')
 ylabel('estados'), xlabel('t[s]'), grid on
 legend('x1',  'x2')
 title('Duplo integrador')
 
 % entradas
 figure(2)
-plot(linspace(0, kmax*Ts, kmax), [u; ulqr; umpc])
+%plot(linspace(0, kmax*Ts, kmax), [u; ulqr; umpc])
+stairs(linspace(0, kmax*Ts, kmax), [u; ulqr; umpc]')
 ylabel('entradas'), xlabel('t[s]'), grid on
 legend('u = ulqr + umpc', 'ulqr',  'umpc')
 title('Duplo integrador')
