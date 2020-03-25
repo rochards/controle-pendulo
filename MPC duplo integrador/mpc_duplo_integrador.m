@@ -6,27 +6,28 @@ clc
 % Implementacao de uma lei de controle do tipo
 %           u(k)    = ulqr(k) + umpc(k), onde:
 %           ulqr(k) = -Klqr*x(k)
-%           umpc(k) = ....
+%           umpc(k) = é dado a partir da resolucao de um problema de
+%           otimizacao
 
 %% condicoes iniciais de simulacao
 x0   = [1.5 -1]'; 
 kmax = 500;  % numero maximo de iteracoes
 Ts   = 1e-2; % s -> periodo de amostragem
 N    = 3;    % horizonte de predicao
-xmax = [1.2 1.5]'; % restricao de estado maxima
-xmin = [-2 -2]';   % restricao de estado minimo
-umax = 10;         % restricao de entrada maxima
-umin = -10;       % restricao de entrada minima
+xMax = [1.5 1.5]'; % restricao de estado maxima
+xMin = [-2 -2]';   % restricao de estado minimo
+uMax = 10;         % restricao de entrada maxima
+uMin = -10;       % restricao de entrada minima
 
 %% scopes
 ulqr = zeros(1, kmax); % entradas lqr
 umpc = zeros(1, kmax); % entradas mpc
 u    = zeros(1, kmax); % ulqr+lmpc  
 x    = zeros(2, kmax); % estados
-Xmax = vertcat(xmax, xmax, xmax);
-Xmin = vertcat(xmin, xmin, xmin);
-Umax = vertcat(umax, umax, umax);
-Umin = vertcat(umin, umin, umin);
+Xmax = vertcat(xMax, xMax, xMax);
+Xmin = vertcat(xMin, xMin, xMin);
+Umax = vertcat(uMax, uMax, uMax);
+Umin = vertcat(uMin, uMin, uMin);
 x(:, 1) = x0;          % passando condicao inicial 
 options =  optimset('Display','off'); % desabilita logs de quadprog
 
@@ -38,13 +39,13 @@ Rlqr = 1;          % matriz de custo da entrada
 [sysc, sysd] = system_data(Ts);
 
 % calculo do vetor ganhos
-[Klqr, S, e] = dlqr(sysd.A, sysd.B, Qlqr, Rlqr);
+[KLqr, S, e] = dlqr(sysd.A, sysd.B, Qlqr, Rlqr);
 
 
 %% obtendo matrizes do MPC
 Qmpc = [1e6 0; 0 5e3]; % matriz de custo dos estados
 Rmpc = 1;          % matriz de custo da entrada
-[A_, Hqp, fqp, Hx, fx, Hu, fu_] = mpc_matrices(sysd.A, sysd.B, Qmpc, Rmpc, Klqr, N);
+[A_, Hqp, fqp, Hx, fx, Hu, fu_] = mpc_matrices(sysd.A, sysd.B, Qmpc, Rmpc, KLqr, N);
 
 
 %% matrizes de restricao dos estados e controle
@@ -55,9 +56,8 @@ Auqp = vertcat(Hu, -Hu);
 buqp = vertcat(Umax, -Umin)*0;% o 0 só serve para dimensionar buqp
 
 %% matrizes de restricao terminal
-% conjunto Oinf
-Aoinf = [eye(2); -eye(2); -Klqr; Klqr];
-boinf = [xmax; -xmin; umax; -umin];
+% matrizes que respeitam as restricoes do conjunto Oinf
+[Aoinf, boinf] = MAS(sysd.A, sysd.B, Ts, KLqr,xMax, xMin, uMax, uMin);
 
 Hab = [A_^N*sysd.B A_*sysd.B sysd.B]; % para N = 3
 
@@ -70,7 +70,7 @@ Aqp = vertcat(Axqp, Auqp, Aoqp);
 %% simulando acao de controle
 for k = 1:kmax
     % calculo acao de controle do LQR
-    ulqr(k) = -Klqr*x(:, k); 
+    ulqr(k) = -KLqr*x(:, k); 
     
     % calculo acao de controle MPC
     fqp_ = 2*x(:, k)'*fqp;
@@ -98,8 +98,13 @@ for k = 1:kmax
 end
 
 %% plotando resultados
+% plotando estados no grafico do MAS
+hold on
+plot(x(1,:), x(2,:),'*')
+
 % estados
-figure(1)
+hold off
+figure
 %plot(linspace(0, kmax*Ts, kmax+1), x)
 stairs(linspace(0, kmax*Ts, kmax+1), x')
 ylabel('estados'), xlabel('t[s]'), grid on
@@ -107,7 +112,7 @@ legend('x1',  'x2')
 title('Duplo integrador')
 
 % entradas
-figure(2)
+figure
 %plot(linspace(0, kmax*Ts, kmax), [u; ulqr; umpc])
 stairs(linspace(0, kmax*Ts, kmax), [u; ulqr; umpc]')
 ylabel('entradas'), xlabel('t[s]'), grid on

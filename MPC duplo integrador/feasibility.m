@@ -23,11 +23,13 @@ Rlqr = 1;          % matriz de custo da entrada
 %% utilizando o MPT
 Ax = [eye(2); -eye(2); -KLqr; KLqr];
 bx = [xMax; -xMin; uMax; -uMin];
-PolyX = Polyhedron('H', [Ax bx] );
+X = Polyhedron('H', [Ax bx] );
 system = LTISystem('A', sysd.A - sysd.B*KLqr);
 % system.x.max = x_max;
 % system.x.min = x_min;
 % system.u.max = u_max;
 % system.u.min = u_min;
-invSet = system.invariantSet('X',PolyX);
+invSet = system.invariantSet('X',X);
 invSet.plot()
+invSet.A
+invSet.b
