@@ -13,7 +13,7 @@ clc
 x0   = [1.5 -1]'; 
 kMax = 500;  % numero maximo de iteracoes
 Ts   = 1e-2; % s -> periodo de amostragem
-N    = 10;    % horizonte de predicao
+N    = 3;    % horizonte de predicao
 xMax = [1.5 1.5]'; % restricao de estado maxima
 xMin = [-2 -2]';   % restricao de estado minimo
 uMax = 10;         % restricao de entrada maxima
@@ -80,10 +80,8 @@ for k = 1:kMax
     bqp  = [bxqp; buqp; boqp]; % concatena todas as restricoes
     
     UMPC = quadprog(2*Hqp, fqp_, Aqp, bqp, [], [], [], [], [], options);
-    if ~isempty(UMPC)
-        uMPC(k) = UMPC(1);
-    end
-    
+    uMPC(k) = UMPC(1);
+        
     % calculo da acao de controle final
     u(k) = uLQR(k) + uMPC(k);
     
