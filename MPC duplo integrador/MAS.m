@@ -1,4 +1,4 @@
-function [Aoinf, boinf] = MAS(A, B, Ts, KLqr, xMax, xMin, uMax, uMin)
+function [Aoinf, boinf] = MAS(A, B, Ts, KLQR, xMax, xMin, uMax, uMin)
     % Funcao que retorna as matrizes do MAS (Maximal Admissible Set) Aoinfo 
     % e boinf, onde Aoinfo*x(k+N|k) <= boinf.
     % Sistema discreto representado no espaco de estados: 
@@ -19,11 +19,12 @@ function [Aoinf, boinf] = MAS(A, B, Ts, KLqr, xMax, xMin, uMax, uMin)
     
     %% definindo matrizes que respeitam as restricoes impostas
     % Ax*x(k)<=bx
-    Ax = [eye(2); -eye(2); -KLqr; KLqr];
+    [m, n] = size(KLQR);
+    Ax = [eye(n); -eye(n); -KLQR; KLQR];
     bx = [xMax; -xMin; uMax; -uMin];
     
     X = Polyhedron('H', [Ax bx]);
-    system = LTISystem('A', A - B*KLqr, 'Ts', Ts);
+    system = LTISystem('A', A - B*KLQR, 'Ts', Ts);
     invSet = system.invariantSet('X',X);
     
     %% retornando matrizes do MAS
