@@ -13,7 +13,7 @@ clc
 x0   = [1.5 -1]'; 
 kMax = 500;  % numero maximo de iteracoes
 Ts   = 1e-2; % s -> periodo de amostragem
-N    = 3;    % horizonte de predicao
+N    = 10;    % horizonte de predicao
 xMax = [1.5 1.5]'; % restricao de estado maxima
 xMin = [-2 -2]';   % restricao de estado minimo
 uMax = 10;         % restricao de entrada maxima
@@ -48,11 +48,7 @@ RMPC = 1;          % matriz de custo da entrada
 [A_, Hqp, fqp, Hx, fx, Hu, fu_] = mpc_matrices(sysd.A, sysd.B, QMPC, RMPC, KLQR, N);
 
 
-%% matrizes de restricao dos estados e controle
-Axqp = [Hx; -Hx];
-Auqp = [Hu; -Hu];
-
-%% matrizes de restricao terminal
+%% matrizes de restricao dos estados, controle e terminal
 % matrizes que respeitam as restricoes do conjunto Oinf
 [Aoinf, boinf, MASObject] = MAS(A_, Ts, KLQR, xMax, xMin, uMax, uMin);
 
@@ -61,10 +57,18 @@ for i = N-2:-1:0
     Hab = horzcat(Hab, A_^i*sysd.B);
 end
 
-Aoqp = Aoinf*Hab;
+Aoqp = Aoinf*Hab; % restricao terminal
+Axqp = [Hx; -Hx]; % restricao de estados
+Auqp = [Hu; -Hu]; % restricao de controle
 
-%% concatenando todas as restricoes
+% concatenando todas as restricoes
 Aqp = [Axqp; Auqp; Aoqp];
+
+%% definicao da regiao de factibilidade
+Af  = [fx; -fx; fu_; -fu_; Aoinf*A_^N];
+bxu = [XMax; -XMin; UMax; -UMin; boinf];
+ThetaAux = Polyhedron('H', [Aqp Af bxu]);
+Theta = ThetaAux.projection(N+1:N+2);
 
 %% simulando acao de controle
 for k = 1:kMax
@@ -96,13 +100,16 @@ for k = 1:kMax
 end
 
 %% plotando resultados
-% grafico do MAS
+% grafico de Theta
 figure
+Theta.plot('Color',[0,0.7,0.9])
+
+% grafico do MAS
+hold on
 MASObject.plot()
 
 % plotando estados no grafico do MAS
-hold on
-plot(x(1,:), x(2,:),'*')
+plot(x(1,:), x(2,:),'y*')
 
 % estados
 hold off
