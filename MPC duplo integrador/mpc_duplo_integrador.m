@@ -54,7 +54,7 @@ Auqp = [Hu; -Hu];
 
 %% matrizes de restricao terminal
 % matrizes que respeitam as restricoes do conjunto Oinf
-[Aoinf, boinf] = MAS(sysd.A, sysd.B, Ts, KLQR, xMax, xMin, uMax, uMin);
+[Aoinf, boinf, MASObject] = MAS(A_, Ts, KLQR, xMax, xMin, uMax, uMin);
 
 Hab = A_^(N-1)*sysd.B;
 for i = N-2:-1:0
@@ -96,6 +96,10 @@ for k = 1:kMax
 end
 
 %% plotando resultados
+% grafico do MAS
+figure
+MASObject.plot()
+
 % plotando estados no grafico do MAS
 hold on
 plot(x(1,:), x(2,:),'*')
