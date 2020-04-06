@@ -13,7 +13,7 @@ clc
 x0   = [1.5 -1]'; 
 kMax = 500;  % numero maximo de iteracoes
 Ts   = 1e-2; % s -> periodo de amostragem
-N    = 3;    % horizonte de predicao
+N    = 5;    % horizonte de predicao
 xMax = [1.5 1.5]'; % restricao de estado maxima
 xMin = [-2 -2]';   % restricao de estado minimo
 uMax = 10;         % restricao de entrada maxima
@@ -30,6 +30,7 @@ UMax = vertconcat(uMax, N);
 UMin = vertconcat(uMin, N);
 x(:, 1) = x0;          % passando condicao inicial 
 options =  optimset('Display','off'); % desabilita logs de quadprog
+exitFlags = zeros(1, kMax); % resultados da funcao quadprog
 
 %% obtendo K do LQR
 QLQR = [100 0; 0 10]; % matriz de custo dos estados
@@ -84,8 +85,9 @@ for k = 1:kMax
     
     bqp  = [bxqp; buqp; boqp]; % concatena todas as restricoes
     
-    UMPC = quadprog(2*Hqp, fqp_, Aqp, bqp, [], [], [], [], [], options);
+    [UMPC, fval, exitflag] = quadprog(2*Hqp, fqp_, Aqp, bqp, [], [], [], [], [], options);
     uMPC(k) = UMPC(1);
+    exitFlags(k) = exitflag;
         
     % calculo da acao de controle final
     u(k) = uLQR(k) + uMPC(k);
@@ -111,6 +113,7 @@ MASObject.plot()
 
 % plotando estados no grafico do MAS
 plot(x(1,:), x(2,:),'y*')
+ylabel('x2'), xlabel('x1'), grid on
 legend('Theta', 'MAS', 'Estados')
 
 % estados
@@ -129,3 +132,8 @@ stairs(linspace(0, kMax*Ts, kMax), [u; uLQR; uMPC]')
 ylabel('entradas'), xlabel('t[s]'), grid on
 legend('u = ulqr + umpc', 'ulqr',  'umpc')
 title('Duplo integrador')
+
+% flags do quadprog
+figure
+scatter(1:kMax, exitFlags, '.')
+ylabel('Quadprog flags'), xlabel('k'), grid on
