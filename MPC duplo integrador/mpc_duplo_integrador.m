@@ -13,7 +13,7 @@ clc
 x0   = [1.5 -1]'; 
 kMax = 500;  % numero maximo de iteracoes
 Ts   = 1e-2; % s -> periodo de amostragem
-N    = 10;    % horizonte de predicao
+N    = 3;    % horizonte de predicao
 xMax = [1.5 1.5]'; % restricao de estado maxima
 xMin = [-2 -2]';   % restricao de estado minimo
 uMax = 10;         % restricao de entrada maxima
@@ -67,6 +67,7 @@ Aqp = [Axqp; Auqp; Aoqp];
 %% definicao da regiao de factibilidade
 Af  = [fx; -fx; fu_; -fu_; Aoinf*A_^N];
 bxu = [XMax; -XMin; UMax; -UMin; boinf];
+% Aa = [Aqp Af]
 ThetaAux = Polyhedron('H', [Aqp Af bxu]);
 Theta = ThetaAux.projection(N+1:N+2);
 
@@ -110,6 +111,7 @@ MASObject.plot()
 
 % plotando estados no grafico do MAS
 plot(x(1,:), x(2,:),'y*')
+legend('Theta', 'MAS', 'Estados')
 
 % estados
 hold off
