@@ -1,4 +1,4 @@
-function [Aoinf, boinf, MASObject] = MAS(A_, Ts, KLQR, xMax, xMin, uMax, uMin)
+function [Aoinf, boinf, MASObject] = MAS(Phi, Ts, KLQR, xMax, xMin, uMax, uMin)
     % Funcao que retorna as matrizes do MAS (Maximal Admissible Set) Aoinfo 
     % e boinf, onde Aoinfo*x(k+N|k) <= boinf.
     % Sistema discreto representado no espaco de estados: 
@@ -7,7 +7,7 @@ function [Aoinf, boinf, MASObject] = MAS(A_, Ts, KLQR, xMax, xMin, uMax, uMin)
     % [Aoinf, boinf] = MAS(A, B, KLqr, xMax, xMin, uMax, uMin)
     %          Aoinf ->
     %          boinf ->
-    %              A -> matriz de malha fechada: A_ =  A - B*KLQR
+    %              A -> matriz de malha fechada: Phi =  A - B*KLQR
     %             Ts -> [s] - tempo de amostragem
     %           KLQR -> vetor de ganhos do LQR
     %           xMax -> vetor coluna de restricoes maximas de estado
@@ -23,7 +23,7 @@ function [Aoinf, boinf, MASObject] = MAS(A_, Ts, KLQR, xMax, xMin, uMax, uMin)
     bx = [xMax; -xMin; uMax; -uMin];
     
     X = Polyhedron('H', [Ax bx]);
-    system = LTISystem('A', A_, 'Ts', Ts);
+    system = LTISystem('A', Phi, 'Ts', Ts);
     MASObject = system.invariantSet('X', X);
     
     %% retornando matrizes do MAS

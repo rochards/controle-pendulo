@@ -46,16 +46,16 @@ RLQR = 1;             % matriz de custo da entrada
 %% obtendo matrizes do MPC
 QMPC = [1e6 0; 0 5e3]; % matriz de custo dos estados
 RMPC = 1;          % matriz de custo da entrada
-[A_, Hqp, fqp, Hx, fx, Hu, fu_] = mpc_matrices(sysd.A, sysd.B, QMPC, RMPC, KLQR, N);
+[Phi, Hqp, fqp, Hx, Px, Hu, Pu] = mpc_matrices(sysd.A, sysd.B, QMPC, RMPC, KLQR, N);
 
 
 %% matrizes de restricao dos estados, controle e terminal
 % matrizes que respeitam as restricoes do conjunto Oinf
-[Aoinf, boinf, MASObject] = MAS(A_, Ts, KLQR, xMax, xMin, uMax, uMin);
+[Aoinf, boinf, MASObject] = MAS(Phi, Ts, KLQR, xMax, xMin, uMax, uMin);
 
-Hab = A_^(N-1)*sysd.B;
+Hab = Phi^(N-1)*sysd.B;
 for i = N-2:-1:0
-    Hab = horzcat(Hab, A_^i*sysd.B);
+    Hab = horzcat(Hab, Phi^i*sysd.B);
 end
 
 Aoqp = Aoinf*Hab; % restricao terminal
@@ -66,7 +66,7 @@ Auqp = [Hu; -Hu]; % restricao de controle
 Aqp = [Axqp; Auqp; Aoqp];
 
 %% definicao da regiao de factibilidade
-Af  = [fx; -fx; fu_; -fu_; Aoinf*A_^N];
+Af  = [Px; -Px; Pu; -Pu; Aoinf*Phi^N];
 bxu = [XMax; -XMin; UMax; -UMin; boinf];
 % Aa = [Aqp Af]
 ThetaAux = Polyhedron('H', [Aqp Af bxu]);
@@ -79,9 +79,9 @@ for k = 1:kMax
     
     % calculo acao de controle MPC
     fqp_ = 2*x(:, k)'*fqp;
-    bxqp = [XMax; -XMin] + [-fx; fx]*x(:, k);
-    buqp = [UMax; -UMin] + [-fu_; fu_]*x(:, k);
-    boqp = boinf - Aoinf*A_^N*x(:, k);
+    bxqp = [XMax; -XMin] + [-Px; Px]*x(:, k);
+    buqp = [UMax; -UMin] + [-Pu; Pu]*x(:, k);
+    boqp = boinf - Aoinf*Phi^N*x(:, k);
     
     bqp  = [bxqp; buqp; boqp]; % concatena todas as restricoes
     
