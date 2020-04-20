@@ -33,13 +33,13 @@ xl(:, 1) = x0;
 %% obtencao do vetor de ganhos K
 
 % matriz de custo dos estados
-Q = [2.4674 0      0 0
-     0      2.4674 0 0
+Q = [4e2 0      0 0
+     0      6e5 0 0
      0      0      1 0
-     0      0      0 2.4674];
+     0      0      0 1];
 
 % matriz de custo das entradas
-R = 0.0156*eye(2);
+R = 1e3*eye(2);
 
 % obtendo matrizes do sistema
 [sysc, sysd] = system_data(Ts);
@@ -88,3 +88,9 @@ plot(linspace(0, kmax*Ts, kmax+1), [xnl(2, :); xl(2, :)], 'LineWidth', 2), hold 
 ylabel('psi [rad]'), xlabel('t[s]'), grid on
 legend('nao linear',  'linear')
 title('psi')
+
+% entradas
+figure(3)
+plot(linspace(0, kmax*Ts, kmax), ul(1,:))
+title('modelo linear')
+ylabel('entrada'), xlabel('t[s]'), grid on
