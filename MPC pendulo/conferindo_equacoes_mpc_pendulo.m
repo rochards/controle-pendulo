@@ -14,9 +14,9 @@ x0   = [0 6*pi/180 0 0]'; % theta, psi, dotTheta, dotPsi
 kMax = 500;  % numero maximo de iteracoes da simulacao
 Ts   = 4e-3; % s -> periodo de amostragem
 N    = 3;    % horizonte de predicao
-xMax = [99999 99999 99999 99999]'; % restricoes maximas de estados
+xMax = [99999 14*pi/180 99999 99999]'; % restricoes maximas de estados
 xMin = -xMax;                      % restricoes minimas de estados
-uMax = [100 100]'; % restricoes maximas de controle
+uMax = [9 9]'; % restricoes maximas de controle
 uMin = -uMax;      % restricoes minimas de controle
 
 %% scopes
