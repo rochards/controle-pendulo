@@ -10,11 +10,11 @@ clc
 %                     otimizacao
 
 %% condicoes iniciais de simulacao
-x0   = [0 10*pi/180 0 0]'; % theta, psi, dotTheta, dotPsi
-kMax = 1000;  % numero maximo de iteracoes da simulacao
+x0   = [0 12*pi/180 0 0]'; % theta, psi, dotTheta, dotPsi
+kMax = 500;  % numero maximo de iteracoes da simulacao
 Ts   = 4e-3; % s -> periodo de amostragem
 N    = 5;    % horizonte de predicao
-xMax = [99999 14*pi/180 99999 99999]'; % restricoes maximas de estados
+xMax = [99999 15*pi/180 99999 99999]'; % restricoes maximas de estados
 xMin = -xMax;                      % restricoes minimas de estados
 uMax = [9 9]'; % restricoes maximas de controle
 uMin = -uMax;      % restricoes minimas de controle
@@ -34,14 +34,19 @@ exitFlags = zeros(1, kMax);           % resultados da funcao quadprog
 
 
 %% obtendo K do LQR
-% matriz de custo dos estados
-QLQR = [2.5 0   0 0 % 4.2e2
-        0   2.5 0 0 % 6.5e5
-        0   0     1 0
-        0   0     0 1];
-
-% matriz de custo das entradas
-RLQR = 1e-3*eye(2); % 1e3
+% % matriz de custo dos estados
+% QLQR = [2.5 0   0 0 % 4.2e2
+%         0   2.5 0 0 % 6.5e5
+%         0   0     1 0
+%         0   0     0 1];
+% 
+% % matriz de custo das entradas
+% RLQR = 1e-3*eye(2); % 1e3
+QLQR = [4.2e2 0     0 0
+        0     6.5e3 0 0
+        0     0     1 0
+        0     0     0 1];
+RLQR = 10*eye(2);
 
 % matrizes do sistema
 [sysc, sysd] = system_data(Ts);
@@ -51,11 +56,16 @@ RLQR = 1e-3*eye(2); % 1e3
 
 
 %% obtendo matrizes do MPC
-QMPC = [7.2 0   0 0 % 7.2
-        0   4.3 0 0 % 4.3
-        0   0     1 0
-        0   0     0 1];
-RMPC = 4.5*eye(2); % 1.5
+% QMPC = [7.2 0   0 0 % 7.2
+%         0   4.3 0 0 % 4.3
+%         0   0     1 0
+%         0   0     0 1];
+% RMPC = 4.5*eye(2); % 1.5
+QMPC = [1e2 0   0 0
+        0 4.5e6 0 0
+        0 0     1 0
+        0 0     0 1];
+RMPC = 3.5*eye(2);
 [Phi, Hqp, fqp, Hx, Px, Hu, Pu] = mpc_matrices(sysd.A, sysd.B, QMPC, RMPC, KLQR, N);
 
 
@@ -76,13 +86,17 @@ Auqp = [Hu; -Hu]; % restricao de controle
 Aqp = [Axqp; Auqp; Aoqp];
 %Aqp = [Axqp; Auqp];
 
+
+Psi = RLQR + sysd.B'*S*sysd.B;
+diagPsi = blkdiag(Psi, Psi, Psi, Psi, Psi);
+
 %% simulando acoes de controle
 for k = 1:kMax
     % calculo acao de controle do LQR
     uLQR(:, k) = -KLQR*x(:, k); 
     
     % calculo acao de controle MPC
-    fqp_ = 2*x(:, k)'*fqp;
+    %fqp_ = 2*x(:, k)'*fqp;
     bxqp = [XMax; -XMin] + [-Px; Px]*x(:, k);
     buqp = [UMax; -UMin] + [-Pu; Pu]*x(:, k);
     boqp = boinf - Aoinf*Phi^N*x(:, k);
@@ -90,10 +104,10 @@ for k = 1:kMax
     bqp  = [bxqp; buqp; boqp]; % concatena todas as restricoes
     %bqp  = [bxqp; buqp];
     % calcula acoes de controle otimizada
-    [UMPC, fval, exitflag] = quadprog(2*Hqp, fqp_, Aqp, bqp, [], [], [], [], [], options);
-    if ~isempty(UMPC)
+    [UMPC, fval, exitflag] = quadprog(2*diagPsi, [], Aqp, bqp, [], [], [], [], [], options);
+    %if ~isempty(UMPC)
         uMPC(:, k) = UMPC(1:2);
-    end
+    %end
     exitFlags(k) = exitflag;
         
     % calculo da acao de controle final
@@ -114,7 +128,7 @@ title('Pendulo Invertido - Modelo Linear')
 
 % entradas
 figure
-stairs(linspace(0, kMax*Ts, kMax), [u(1, :); uLQR(1, :); uMPC(1, :)]')
+stairs(linspace(0, kMax*Ts, kMax), [u(1, :); uLQR(1, :); uMPC(1, :)]', 'LineWidth', 2)
 ylabel('entradas'), xlabel('t[s]'), grid on
 legend('u = uLQR + uMPC', 'uLQR',  'uMPC')
 title('Pendulo invertido linar')

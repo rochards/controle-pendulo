@@ -84,7 +84,8 @@ function [sysc, sysd] = system_data(Ts)
          df3du1 df3du2
          df4du1 df4du2];
     
-   C = [1 0 0 0; 0 1 0 0];
+   %C = [1 0 0 0; 0 1 0 0];
+   C = eye(4); 
    
    D = 0;
    
