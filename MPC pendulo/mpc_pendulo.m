@@ -13,7 +13,7 @@ clc
 x0   = [0 12*pi/180 0 0]'; % theta, psi, dotTheta, dotPsi
 kMax = 500;  % numero maximo de iteracoes da simulacao
 Ts   = 4e-3; % s -> periodo de amostragem
-N    = 5;    % horizonte de predicao
+N    = 2;    % horizonte de predicao
 xMax = [99999 15*pi/180 99999 99999]'; % restricoes maximas de estados
 xMin = -xMax;                      % restricoes minimas de estados
 uMax = [9 9]'; % restricoes maximas de controle
@@ -88,7 +88,14 @@ Aqp = [Axqp; Auqp; Aoqp];
 
 
 Psi = RLQR + sysd.B'*S*sysd.B;
-diagPsi = blkdiag(Psi, Psi, Psi, Psi, Psi);
+diagPsi = blkdiag(Psi, Psi);
+
+%% definicao da regiao de factibilidade
+Af  = [Px; -Px; Pu; -Pu; Aoinf*Phi^N];
+bxu = [XMax; -XMin; UMax; -UMin; boinf];
+% Aa = [Aqp Af]
+Theta = Polyhedron('H', [Aqp Af bxu]);
+
 
 %% simulando acoes de controle
 for k = 1:kMax
@@ -119,18 +126,57 @@ for k = 1:kMax
     fprintf('Iteration: %d\n', k);
 end
 
+%% resultados
+figure
+% grafico de THETA (regicao de factibilidade)
+disp('THETA da projecao de theta e thetaPonto...')
+Thetaproj1 = Theta.projection([2*N+1 2*N+3]);
+Thetaproj1.plot('Color', [0, 0.7, 0.9])
+
+hold on
+% grafico do MAS
+disp('MAS da projecao de theta e thetaPonto...')
+MASproj1 = MASObject.projection([1 3], 'fourier');
+MASproj1.plot()
+
+% plot da evolucao dos estados no MAS
+%hold on
+plot(x(1,:), x(3,:), 'y*')
+xlabel('theta'), ylabel('theta ponto'), grid on
+legend('THETA', '?', '?', '?','MAS', 'Estados')
+%legend('MAS', 'Estados')
+
+figure
+%grafico de THETA (regiao de factibilidade)
+disp('THETA da projecao de psi e psi ponto')
+Thetaproj2 = Theta.projection([2*N+2 2*N+4]);
+Thetaproj2.plot('Color', [0, 0.7, 0.9])
+
+% grafico do MAS
+hold on
+disp('MAS da projecao de psi e psiPonto')
+MASproj2 = MASObject.projection([2 4], 'fourier');
+MASproj2.plot()
+
+% plot da evolucao dos estados no MAS
+%hold on
+plot(x(2,:), x(4,:), 'y*')
+xlabel('psi'), ylabel('psi ponto'), grid on
+legend('THETA', 'MAS', 'estados');
+%legend('MAS', 'Estados');
+
 % estados
 figure
 plot(linspace(0, kMax*Ts, kMax+1), x)
 ylabel('estados'), xlabel('t[s]'), grid on
-legend('x1',  'x2', 'x3', 'x4')
+legend('theta',  'psi', 'theta ponto', 'psi ponto')
 title('Pendulo Invertido - Modelo Linear')
 
 % entradas
 figure
-stairs(linspace(0, kMax*Ts, kMax), [u(1, :); uLQR(1, :); uMPC(1, :)]', 'LineWidth', 2)
+stairs(linspace(0, kMax*Ts, kMax), [uLQR(1, :); uMPC(1, :); u(1, :)]', 'LineWidth', 2)
 ylabel('entradas'), xlabel('t[s]'), grid on
-legend('u = uLQR + uMPC', 'uLQR',  'uMPC')
+legend('uLQR',  'uMPC', 'u = uLQR + uMPC')
 title('Pendulo invertido linar')
 
 % flags do quadprog
